@@ -1,0 +1,13 @@
+# Environment
+.env
+
+# Compiled binaries
+ms1-users
+*.exe
+*.out
+
+# Swagger generated docs (regenerate with: swag init)
+docs/
+
+# Go workspace
+vendor/
