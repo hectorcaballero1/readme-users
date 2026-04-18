@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "MS1 — Users (ReadMe)",
+    "description": "ReadMe microservice 1: user registration, login, profile management and zone lookup.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT set automatically by the Login request Tests script"
+    }
+  ],
+  "item": [
+    {
+      "name": "Register user",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ana García\",\n  \"email\": \"ana@example.com\",\n  \"password\": \"secret123\",\n  \"zone_id\": 1\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Creates a new user. zone_id is optional. To upload a profile photo use the Upload profile photo endpoint."
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.collectionVariables.set(\"token\", jsonData.data.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"ana@example.com\",\n  \"password\": \"secret123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Authenticates user and returns a JWT. The Tests script saves the token to the {{token}} collection variable automatically."
+      }
+    },
+    {
+      "name": "Get user profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "1"]
+        },
+        "description": "Returns a user's profile. Replace 1 with the real user ID. Never returns password_hash."
+      }
+    },
+    {
+      "name": "Update user profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "1"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ana García Actualizado\",\n  \"zone_id\": 2,\n  \"photo_url\": \"https://example.com/new-photo.jpg\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Updates name, zone_id and/or photo_url. Only the account owner can call this. Replace 1 with your user ID. Pass null to clear a nullable field (e.g. \"zone_id\": null)."
+      }
+    },
+    {
+      "name": "Upload profile photo",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/1/photo",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "1", "photo"]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "photo",
+              "type": "file",
+              "description": "Image file (jpg, png, etc.)"
+            }
+          ]
+        },
+        "description": "Uploads a profile photo to S3. Replace 1 with your user ID. If the user already had a photo, the previous one is deleted from S3 automatically."
+      }
+    },
+    {
+      "name": "List zones",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/zones",
+          "host": ["{{base_url}}"],
+          "path": ["api", "zones"]
+        },
+        "description": "Returns all available Lima zones for dropdown population."
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ms1_postgres
+    environment:
+      POSTGRES_USER: readme
+      POSTGRES_PASSWORD: readme123
+      POSTGRES_DB: ms1_users
+    ports:
+      - "5432:5432"
+    volumes:
+      - ms1_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readme -d ms1_users"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ms1_pgdata:
