@@ -22,19 +22,24 @@ Levanta PostgreSQL en el puerto 5432.
 
 **Documentación Swagger**
 
-Solo la primera vez (y cada vez que modifiques anotaciones en los handlers):
+Solo la primera vez (instala la herramienta `swag` en tu máquina):
 
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+Cada vez que modifiques anotaciones en los handlers (regenera `docs/`):
+
+```bash
 swag init
 ```
 
-> Si `swag` no se reconoce como comando, agrega el bin de Go a tu PATH y recarga la terminal:
-> ```bash
-> export PATH=$PATH:$(go env GOPATH)/bin
-> ```
+Si `swag` no se reconoce como comando, agrega el bin de Go a tu PATH y recarga la terminal:
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
 
-**Correr la app**
+Correr la app
 
 ```bash
 go run main.go
