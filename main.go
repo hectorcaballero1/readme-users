@@ -1,7 +1,7 @@
 // @title           MS1 Users API
 // @version         1.0
 // @description     User management microservice for the ReadMe book marketplace platform.
-// @host            localhost:8001
+// @host
 // @BasePath        /api
 
 // @securityDefinitions.apikey BearerAuth
