@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"os"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -13,7 +15,18 @@ import (
 )
 
 func Setup(r *gin.Engine, db *gorm.DB, s3 *storage.S3Service) {
-	r.Use(cors.Default())
+	allowedOrigin := os.Getenv("ALLOWED_ORIGINS")
+	var corsConfig cors.Config
+	if allowedOrigin == "" {
+		corsConfig = cors.DefaultConfig()
+		corsConfig.AllowAllOrigins = true
+	} else {
+		corsConfig = cors.DefaultConfig()
+		corsConfig.AllowOrigins = []string{allowedOrigin}
+	}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Authorization", "Content-Type", "X-Api-Key"}
+	r.Use(cors.New(corsConfig))
 
 	userHandler := handlers.NewUserHandler(db, s3)
 	zoneHandler := handlers.NewZoneHandler(db)
