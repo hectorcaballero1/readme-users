@@ -17,6 +17,7 @@ func Setup(r *gin.Engine, db *gorm.DB, s3 *storage.S3Service) {
 
 	userHandler := handlers.NewUserHandler(db, s3)
 	zoneHandler := handlers.NewZoneHandler(db)
+	exportHandler := handlers.NewExportHandler(db)
 
 	// Swagger UI at /swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -35,6 +36,14 @@ func Setup(r *gin.Engine, db *gorm.DB, s3 *storage.S3Service) {
 			auth.PUT("/users/:id", userHandler.UpdateProfile)
 			auth.POST("/users/:id/photo", userHandler.UploadPhoto)
 			auth.GET("/zones", zoneHandler.ListZones)
+		}
+
+		// Export endpoints (require API key)
+		export := api.Group("/export")
+		export.Use(middlewares.ApiKeyMiddleware())
+		{
+			export.GET("/users", exportHandler.ExportUsers)
+			export.GET("/zones", exportHandler.ExportZones)
 		}
 	}
 }
