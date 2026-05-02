@@ -32,6 +32,10 @@ func Setup(r *gin.Engine, db *gorm.DB, s3 *storage.S3Service) {
 	zoneHandler := handlers.NewZoneHandler(db)
 	exportHandler := handlers.NewExportHandler(db)
 
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	// Swagger UI at /swagger/index.html
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
