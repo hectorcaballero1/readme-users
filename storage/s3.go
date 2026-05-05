@@ -22,10 +22,17 @@ type S3Service struct {
 }
 
 func NewS3Service(accessKey, secretKey, region, bucket string) (*S3Service, error) {
-	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+	opts := []func(*awsconfig.LoadOptions) error{
 		awsconfig.WithRegion(region),
-		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
-	)
+	}
+	if accessKey != "" && secretKey != "" {
+		opts = append(opts, awsconfig.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
+		))
+	}
+	// credenciales vacías → SDK usa DefaultCredentialsProvider → IAM role via IMDS
+
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(), opts...)
 	if err != nil {
 		return nil, err
 	}

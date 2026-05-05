@@ -30,14 +30,14 @@ func main() {
 	database.RunMigrations(db)
 
 	var s3 *storage.S3Service
-	if cfg.AWSAccessKey != "" && cfg.AWSBucket != "" {
+	if cfg.AWSBucket != "" {
 		var err error
 		s3, err = storage.NewS3Service(cfg.AWSAccessKey, cfg.AWSSecretKey, cfg.AWSRegion, cfg.AWSBucket)
 		if err != nil {
 			log.Printf("WARNING: S3 storage not available: %v", err)
 		}
 	} else {
-		log.Println("WARNING: AWS credentials not set — photo upload disabled")
+		log.Println("WARNING: AWS_S3_BUCKET not set — photo upload disabled")
 	}
 
 	r := gin.Default()
