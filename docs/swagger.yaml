@@ -1,0 +1,292 @@
+basePath: /api
+definitions:
+  handlers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      zone_id:
+        type: integer
+    required:
+    - email
+    - name
+    - password
+    type: object
+  handlers.ZoneListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Zone'
+        type: array
+      message:
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  models.Zone:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: User management microservice for the ReadMe book marketplace platform.
+  title: MS1 Users API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a user account. zone_id and photo_url are optional.
+      parameters:
+      - description: Registration data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "409":
+          description: Email already registered
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Returns a user's public profile. Never includes password_hash.
+        Called by other microservices for user validation.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates name, zone_id, and/or photo_url. Only the account owner
+        can call this endpoint. Pass null to clear a nullable field.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update (name, zone_id, photo_url)
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated profile
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
+  /users/{id}/photo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads an image to S3 and stores the URL as the user's photo.
+        Replaces the previous photo if one exists.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Photo file
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated profile
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing file
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Upload error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "503":
+          description: Storage not configured
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload profile photo
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT valid for 24 h.
+      parameters:
+      - description: Credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token + user
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Login
+      tags:
+      - users
+  /zones:
+    get:
+      description: Returns all available delivery/pickup zones for dropdown population
+        in the frontend.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of zones
+          schema:
+            $ref: '#/definitions/handlers.ZoneListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List zones
+      tags:
+      - zones
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
